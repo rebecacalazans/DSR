@@ -1,5 +1,7 @@
 #pragma once
 
+#include <time.h>
+
 #define MAX_LEN = 1024;
 
 struct routerqt_hdr {
@@ -22,4 +24,10 @@ struct routereply_hdr {
   unsigned char type;
   unsigned char data_len;
   unsigned char l;
+};
+
+struct route {
+  time_t t;
+  unsigned short route_len;
+  unsigned int *hosts;
 };
