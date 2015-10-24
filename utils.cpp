@@ -1,4 +1,4 @@
-#pragma once
+#include <arpa/inet.h>
 
 unsigned short checksum(unsigned short* ptr, int nbytes) {
   int sum = 0;
@@ -15,5 +15,5 @@ unsigned short checksum(unsigned short* ptr, int nbytes) {
 }
 unsigned short generate_identification(unsigned int saddr) {
   static unsigned char c;
-  return (saddr << 8) | c++;
+  return (htonl(saddr) << 8) | c++;
 }

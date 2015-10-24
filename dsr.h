@@ -2,7 +2,7 @@
 
 #include <time.h>
 
-#define MAX_LEN = 1024;
+#define MAX_LEN 1024
 
 struct routerqt_hdr {
   unsigned char next_hdr;
