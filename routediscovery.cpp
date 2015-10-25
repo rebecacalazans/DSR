@@ -5,7 +5,6 @@
 #include <arpa/inet.h>
 
 unsigned int create_routerqt (char *packet, unsigned int target, unsigned int saddr) {
-
   struct iphdr* ip = (struct iphdr*) packet;
 
   unsigned int packet_len = sizeof(struct iphdr) + sizeof(struct routerqt_hdr) + sizeof(unsigned int);
@@ -33,6 +32,25 @@ unsigned int create_routerqt (char *packet, unsigned int target, unsigned int sa
 
   unsigned int *addr = (unsigned int*) (packet + sizeof(struct iphdr) + sizeof(struct routerqt_hdr));
   *addr = saddr;
+
+  return packet_len;
+}
+
+unsigned int addaddr_routerqt (char *packet, unsigned int saddr) {
+  struct iphdr* ip = (struct iphdr*) packet;
+
+  ip->tot_len += 4;
+  ip->saddr = saddr;
+
+  struct routerqt_hdr *routerqt = (struct routerqt_hdr*) (packet + sizeof(struct iphdr));
+
+  unsigned int *addr = (unsigned int*) (packet + sizeof(struct iphdr) + sizeof(struct routerqt_hdr) + routerqt->data_len-6);
+  *addr = saddr;
+
+  routerqt->payload_len += 4;
+  routerqt->data_len += 4;
+
+  unsigned int packet_len = sizeof(struct iphdr) + sizeof(struct routerqt_hdr) + routerqt->data_len - 6;
 
   return packet_len;
 }
