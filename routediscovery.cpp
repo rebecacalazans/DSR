@@ -4,6 +4,7 @@
 #include <routediscovery.h>
 #include <arpa/inet.h>
 #include <time.h>
+#include <stdlib.h>
 
 #include <map>
 
@@ -94,4 +95,43 @@ void addroute (std::map<unsigned int, struct route*> &routes, char *packet, unsi
     addr--;
   }
   routes[ptr->hosts[n-1]]=ptr;
+}
+
+//Essa função gera um routerply através de um pacote contendo um routerqt
+unsigned int create_routereply (char *packet, char *packetrcv) {
+  struct routerqt_hdr *routerqt = (struct routerqt_hdr*) (packetrcv + sizeof(struct iphdr));
+  int n = (routerqt->data_len - 6)/4;
+  struct iphdr* ip = (struct iphdr*) packet;
+
+  unsigned int packet_len = sizeof(struct iphdr) + sizeof(struct routereply_hdr) + n*sizeof(unsigned int);
+
+  ip->version = 4;
+  ip->ihl = 5;
+  ip->tos = 0;
+  ip->tot_len = htons(packet_len);
+  ip->id = 0;
+  ip->frag_off = 0;
+  ip->ttl = 1;
+  ip->protocol = 48;
+  ip->saddr = routerqt->taddr;
+  //TODO: Preencher endereço de destino no pacote IP
+
+  struct routereply_hdr *routereply = (struct routereply_hdr*) (packet + sizeof(struct iphdr));
+
+  routereply->next_hdr = 0;
+  routereply->f = 0;
+  routereply->payload_len = (n+1)*4;
+  routereply->type = 2;
+  routereply->data_len = n*4 +1;
+  routereply->l = 0;
+
+  unsigned int *addr = (unsigned int*) (packet + sizeof(struct iphdr) + sizeof(struct routereply_hdr));
+  unsigned int *addr2 = (unsigned int*) (packetrcv + sizeof(struct iphdr) + sizeof(struct routerqt_hdr));
+  for (int i = 0; i < n; i++) {
+    *addr = *addr2;
+    addr++;
+    addr2++;
+  }
+
+  return packet_len;
 }
