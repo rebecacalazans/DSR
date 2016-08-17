@@ -20,7 +20,7 @@ unsigned int create_routerqt (char *packet, unsigned int target, unsigned int sa
   ip->id = 0;
   ip->frag_off = 0;
   ip->ttl = 1;
-  ip->protocol = 48;
+  ip->protocol = htons(48);
   ip->saddr = saddr;
   ip->daddr = inet_addr("255.255.255.255");
 
@@ -98,6 +98,9 @@ void addroute (std::map<unsigned int, struct route*> &routes, char *packet, unsi
 }
 
 //Essa função gera um routerply através de um pacote contendo um routerqt
+//Parametros: packet -> ponteiro com espaço alocado para dados do pacote
+//            packetrcv -> routetqt com dados para gerar o routerqply
+//Retorna o tamanho do pacote gerado
 unsigned int create_routereply (char *packet, char *packetrcv) {
   struct routerqt_hdr *routerqt = (struct routerqt_hdr*) (packetrcv + sizeof(struct iphdr));
   int n = (routerqt->data_len - 6)/4;
@@ -133,5 +136,8 @@ unsigned int create_routereply (char *packet, char *packetrcv) {
     addr2++;
   }
 
+  ip->daddr = *(addr2-1);
+
   return packet_len;
 }
+

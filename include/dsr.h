@@ -1,8 +1,12 @@
 #pragma once
-
 #include <time.h>
 
-#define MAX_LEN 1024
+struct dsr_hdr {
+  unsigned char next_hdr;
+  unsigned char f;
+  unsigned short payload_len;
+  unsigned char type;
+};
 
 struct routerqt_hdr {
   unsigned char next_hdr;
