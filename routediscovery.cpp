@@ -20,7 +20,7 @@ unsigned int create_routerqt (char *packet, unsigned int target, unsigned int sa
   ip->id = 0;
   ip->frag_off = 0;
   ip->ttl = 1;
-  ip->protocol = htons(48);
+  ip->protocol = 48;
   ip->saddr = saddr;
   ip->daddr = inet_addr("255.255.255.255");
 
@@ -53,6 +53,21 @@ unsigned int addaddr_routerqt (char *packet, unsigned int saddr) {
 
   routerqt->payload_len += 4;
   routerqt->data_len += 4;
+
+  unsigned int packet_len = sizeof(struct iphdr) + sizeof(struct routerqt_hdr) + routerqt->data_len - 6;
+
+  return packet_len;
+}
+
+unsigned int rmaddr_routerqt (char *packet) {
+  struct iphdr* ip = (struct iphdr*) packet;
+
+  ip->tot_len -= 4;
+
+  struct routerqt_hdr *routerqt = (struct routerqt_hdr*) (packet + sizeof(struct iphdr));
+
+  routerqt->payload_len -= 4;
+  routerqt->data_len -= 4;
 
   unsigned int packet_len = sizeof(struct iphdr) + sizeof(struct routerqt_hdr) + routerqt->data_len - 6;
 
@@ -117,6 +132,7 @@ unsigned int create_routereply (char *packet, char *packetrcv) {
   ip->ttl = 1;
   ip->protocol = 48;
   ip->saddr = routerqt->taddr;
+
   //TODO: Preencher endereço de destino no pacote IP
 
   struct routereply_hdr *routereply = (struct routereply_hdr*) (packet + sizeof(struct iphdr));
@@ -127,6 +143,7 @@ unsigned int create_routereply (char *packet, char *packetrcv) {
   routereply->type = 2;
   routereply->data_len = n*4 +1;
   routereply->l = 0;
+  routereply->reserved = 0;
 
   unsigned int *addr = (unsigned int*) (packet + sizeof(struct iphdr) + sizeof(struct routereply_hdr));
   unsigned int *addr2 = (unsigned int*) (packetrcv + sizeof(struct iphdr) + sizeof(struct routerqt_hdr));

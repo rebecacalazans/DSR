@@ -24,10 +24,10 @@ struct routereply_hdr {
   unsigned char f;
   unsigned short payload_len;
 
-  unsigned char reserved;
   unsigned char type;
   unsigned char data_len;
   unsigned char l;
+  unsigned char reserved;
 };
 
 struct route {

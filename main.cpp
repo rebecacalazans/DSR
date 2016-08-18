@@ -101,27 +101,40 @@ void process_thread(unsigned int sockfd) {
           servaddr.sin_addr.s_addr = *daddr;
           memset(&servaddr.sin_zero, 0, sizeof (servaddr.sin_zero));
 
+          ip->check = checksum((unsigned short*) packet, sizeof(struct iphdr));
           if (sendto(sockfd, packet2, packet_size, 0, (struct sockaddr*) &servaddr, sizeof (servaddr)) < 1)//Envia pacote e verifica envio
           {
             perror("send failed");
             return;
           }
+          free(packet2);
         }
         else {
           f = fopen("redes.txt", "r");
 
           while(fscanf(f, "%s%s", a, b)!= EOF) {
             addr = inet_addr(a), mask = inet_addr(b);
-            if(addr == dsr->taddr) {
-              printf("ok\n");
-              ok = 1;
-              break;
+            int packet_size = addaddr_routerqt(packet, addr);
+            ip = (struct iphdr*) packet;
+            ip->saddr = addr;
+            ip->daddr = (~mask)|addr;
+
+            servaddr.sin_family = AF_INET;
+            servaddr.sin_addr.s_addr = ip->daddr;
+            memset(&servaddr.sin_zero, 0, sizeof (servaddr.sin_zero));
+
+            ip->check = checksum((unsigned short*) packet, sizeof(struct iphdr));
+            if (sendto(sockfd, packet, packet_size, 0, (struct sockaddr*) &servaddr, sizeof (servaddr)) < 1)//Envia pacote e verifica envio
+            {
+              perror("send failed");
+              return;
             }
+            rmaddr_routerqt(packet);
           }
           fclose(f);
-
         }
       }
+      free(packet);
     }
   }
 }
@@ -131,8 +144,8 @@ int main() {
 
   int on = 1;
 
-  int sockrcv = socket(AF_INET, SOCK_RAW, IPPROTO_UDP),
-      socksend = socket(AF_INET, SOCK_RAW, IPPROTO_UDP);
+  int sockrcv = socket(AF_INET, SOCK_RAW, 48),
+      socksend = socket(AF_INET, SOCK_RAW, 48);
 
   if(sockrcv < 0 || socksend < 0) {
     perror("could not create socket");
@@ -141,6 +154,11 @@ int main() {
 
   if ((setsockopt(sockrcv, IPPROTO_IP, IP_HDRINCL, (const char*)&on, sizeof(on)) |
        setsockopt(socksend, IPPROTO_IP, IP_HDRINCL, (const char*)&on, sizeof(on)) ) == -1) {
+    perror("setsockopt");
+    return 0;
+  }
+  if ((setsockopt (sockrcv, SOL_SOCKET, SO_BROADCAST, (const char*)&on, sizeof(on))|
+       setsockopt (socksend, SOL_SOCKET, SO_BROADCAST, (const char*)&on, sizeof(on))) == -1) {
     perror("setsockopt");
     return 0;
   }
