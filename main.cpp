@@ -27,7 +27,7 @@ using std::make_pair;
 
 const unsigned int MAX_LEN = 2000;
 
-std::mutex mutrcv, mutsock, mutqwerty;
+std::mutex mutrcv, mutqwerty;
 std::queue <pair<unsigned char*, unsigned int> > rcv_buffer;
 
 std::map<unsigned int, struct route*> routes;
@@ -39,12 +39,10 @@ void rcv_thread(unsigned int sockfd) {
     unsigned int pcklen;
     unsigned int addrlen = 0;
     unsigned char *packet = (unsigned char*) malloc(MAX_LEN);
-    mutsock.lock();
     pcklen = recvfrom(sockfd, packet, MAX_LEN, 0, NULL, &addrlen);
-    mutsock.unlock();
 
     mutrcv.lock();
-    rcv_buffer.push( make_pair(packet, pcklen) );
+    rcv_buffer.push( make_pair(packet, pcklen));
     mutrcv.unlock();
     mutqwerty.unlock();
   }
@@ -56,7 +54,6 @@ void process_thread(unsigned int sockfd) {
     mutqwerty.lock();
     while(!rcv_buffer.empty()) {
       printf("processando mensagem\n");
-
       struct sockaddr_in servaddr;
 
       mutrcv.lock();
@@ -64,20 +61,20 @@ void process_thread(unsigned int sockfd) {
       unsigned int len = rcv_buffer.front().second;
       rcv_buffer.pop();
       mutrcv.unlock();
+
       struct iphdr* ip = (struct iphdr*) packet;
-      if(ip->protocol != htons(48)) continue;
+      if(ip->protocol != 48) continue;
       struct dsr_hdr* dsr = (struct dsr_hdr*) (packet + sizeof(struct iphdr));
 
       if(dsr->type == 1) {
         struct routerqt_hdr* dsr = (struct routerqt_hdr*) (packet + sizeof(struct iphdr));
-        if(routerqt_id[dsr->identification]++) continue;
+        //if(routerqt_id[dsr->identification]++) continue;
 
         printf("Mensagem recebida: route request:\n\n");
         printpacket((unsigned char*) packet, len);
         printf("\n\n");
 
         {
-
           struct in_addr addr;
           addr.s_addr = dsr->taddr;
 
