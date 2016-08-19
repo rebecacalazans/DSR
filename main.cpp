@@ -52,7 +52,7 @@ void process_thread(unsigned int sockfd) {
   while(1) {
     mutqwerty.lock();
     while(!rcv_buffer.empty()) {
-      printf("processando mensagem\n");
+      //printf("processando mensagem\n");
       struct sockaddr_in servaddr;
 
       mutrcv.lock();
@@ -154,18 +154,18 @@ void process_thread(unsigned int sockfd) {
       else if(dsr->type == 2) {
         struct routereply_hdr* dsr = (struct routereply_hdr*) (packet + sizeof(struct iphdr));
 
-        unsigned int *addr = (unsigned int*) (packet+sizeof(struct iphdr) + sizeof(struct routereply_hdr));
-        while(*addr != ip->saddr) addr++;
-        addr++;
+        unsigned int *addr = (unsigned int*) (packet + sizeof(struct iphdr) + sizeof(struct routereply_hdr)) + 1;
 
-        if((addr+1) == (unsigned int*) (packet + len)) {
+        if((*addr) == ip->saddr) {
           printf("Route reply recebido com sucesso\n\n");
           printpacket((unsigned char*) packet, len);
           printf("\n\n");
         }
         else {
+          while((*addr) != ip->saddr) addr++;
+          addr--;
           ip->saddr = *addr;
-          ip->daddr = *(addr+1);
+          ip->daddr = *(addr-1);
 
           servaddr.sin_family = AF_INET;
           servaddr.sin_addr.s_addr = ip->daddr;
