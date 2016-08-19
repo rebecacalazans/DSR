@@ -35,7 +35,6 @@ std::map<unsigned short, int> routerqt_id;
 
 void rcv_thread(unsigned int sockfd) {
   while(1) {
-    printf("rcv_thread\n");
     unsigned int pcklen;
     unsigned int addrlen = 0;
     unsigned char *packet = (unsigned char*) malloc(MAX_LEN);
@@ -68,7 +67,7 @@ void process_thread(unsigned int sockfd) {
 
       if(dsr->type == 1) {
         struct routerqt_hdr* dsr = (struct routerqt_hdr*) (packet + sizeof(struct iphdr));
-        //if(routerqt_id[dsr->identification]++) continue;
+        if(routerqt_id[dsr->identification]++) continue;
 
         printf("Mensagem recebida: route request:\n\n");
         printpacket((unsigned char*) packet, len);
@@ -107,7 +106,7 @@ void process_thread(unsigned int sockfd) {
           ip->saddr = addr;
           unsigned int *daddr = (unsigned int*) (packet2 + sizeof(struct iphdr) + sizeof(struct routereply_hdr));
           while(*daddr != addr) daddr++;
-          daddr++;
+          daddr--;
           ip->daddr = *daddr;
 
           servaddr.sin_family = AF_INET;
