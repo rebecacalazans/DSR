@@ -91,23 +91,8 @@ int main (int argc, char **argv) {
     }
   }
   fclose(f);
-  free(packet);
 
   printf("enviada\n");
-
-  memset(packet, 0, MAX_LEN);//Inicia pacote
-
-  unsigned int addrlen = 0;
-  int bytesrecv = recvfrom(sockfd, packet, packet_size, 0, NULL, &addrlen);//Recebe a resposta
-  printf("recebida\n");
-
-  if (bytesrecv < 1){
-    perror("recv failed\n");
-  }
-  else{
-    printf("\n\n");
-    printpacket((unsigned char*) packet, bytesrecv);
-  }
 
   free(packet);
   close(sockfd);

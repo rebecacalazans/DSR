@@ -28,6 +28,7 @@ std::mutex mutrcv, mutsock, mutqwerty;
 std::queue <unsigned char*> rcv_buffer;
 
 std::map<unsigned int, struct route*> routes;
+std::map<unsigned short, int> routerqt_id;
 
 void rcv_thread(unsigned int sockfd) {
   while(1) {
@@ -68,6 +69,7 @@ void process_thread(unsigned int sockfd) {
 
       if(dsr->type == 1) {
         struct routerqt_hdr* dsr = (struct routerqt_hdr*) (packet + sizeof(struct iphdr));
+        if(routerqt_id[dsr->identification]++) continue;
         char a[20], b[20];
         FILE *f;
         unsigned int addr, mask;
