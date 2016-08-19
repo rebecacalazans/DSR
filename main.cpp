@@ -145,13 +145,14 @@ void process_thread(unsigned int sockfd) {
               perror("send failed");
               return;
             }
-            printf("Route request encaminhada\n\n");
+            printf("Route request encaminhado\n\n");
             rmaddr_routerqt(packet);
           }
           fclose(f);
         }
       }
       else if(dsr->type == 2) {
+        printf("Mensagem recebida: route reply:\n\n");
         struct routereply_hdr* dsr = (struct routereply_hdr*) (packet + sizeof(struct iphdr));
 
         unsigned int *addr = (unsigned int*) (packet + sizeof(struct iphdr) + sizeof(struct routereply_hdr)) + 1;
@@ -164,8 +165,29 @@ void process_thread(unsigned int sockfd) {
         else {
           while((*addr) != ip->saddr) addr++;
           addr--;
-          ip->saddr = *addr;
-          ip->daddr = *(addr-1);
+          addr--;
+          ip->daddr = *addr;
+
+          printf("Route reply encaminhado\n\n");
+          printpacket((unsigned char*) packet, len);
+          printf("\n\n");
+
+          char a[20], b[20];
+          FILE *f;
+          f = fopen("redes.txt", "r");
+          unsigned int addr2, mask;
+
+          while(fscanf(f, "%s%s", a, b)!= EOF) {
+            addr2 = inet_addr(a), mask = inet_addr(b);
+            if((addr2 & mask) == (ip->daddr & mask)) {
+              break;
+            }
+          }
+          fclose(f);
+
+          ip->saddr = addr2;
+          addr++;
+          (*addr) = addr2;
 
           servaddr.sin_family = AF_INET;
           servaddr.sin_addr.s_addr = ip->daddr;
